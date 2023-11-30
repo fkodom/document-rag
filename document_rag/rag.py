@@ -1,0 +1,136 @@
+from typing import Optional, Sequence, TypedDict
+
+import numpy as np
+from typing_extensions import Self
+
+from document_rag.llm import BaseLLM, load_llm
+from document_rag.ranker import BaseRanker, load_ranker
+from document_rag.settings import Settings
+from document_rag.vector_db import BaseVectorDB, SearchResult, create_vector_db
+
+SETTINGS = Settings()
+DOCUMENT_TEMPLATE = """
+(similarity={similarity})
+{text}
+"""
+PROMPT_TEMPLATE = """Answer a question based on a collection of documents.
+
+QUESTION: {question}
+
+DOCUMENTS:
+
+{documents}
+
+END OF DOCUMENTS
+
+Base your answer ONLY on the documents above.  Answer as concisely as possible, while
+still being complete.  If you cannot answer, respond with the word UNKNOWN."""
+
+
+class RAGResult(TypedDict):
+    text: str
+    prompt: str
+    search_results: Sequence[SearchResult]
+
+
+class RAG:
+    def __init__(
+        self,
+        llm: BaseLLM,
+        ranker: BaseRanker,
+        vector_db: BaseVectorDB,
+        # TODO: Add description for these parameters
+        retriever_chunks: int = SETTINGS.DOCUMENT_RAG_RETRIEVER_CHUNKS,
+        ranker_chunks: int = SETTINGS.DOCUMENT_RAG_RANKER_CHUNKS,
+    ):
+        self.llm = llm
+        self.ranker = ranker
+        self.vector_db = vector_db
+        self.retriever_chunks = retriever_chunks
+        self.ranker_chunks = ranker_chunks
+
+    @classmethod
+    def from_settings(
+        cls,
+        settings: Optional[Settings] = None,
+        vector_db_exists_ok: bool = False,
+    ) -> Self:
+        if not settings:
+            settings = Settings()
+
+        llm = load_llm(
+            type=settings.DOCUMENT_RAG_LLM_TYPE,
+            model=settings.DOCUMENT_RAG_LLM_MODEL,
+        )
+        ranker = load_ranker(
+            type=settings.DOCUMENT_RAG_RANKER_TYPE,
+            model=settings.DOCUMENT_RAG_RANKER_MODEL,
+        )
+        vector_db = create_vector_db(
+            type=settings.DOCUMENT_RAG_VECTOR_DB_TYPE,
+            cache_dir=settings.DOCUMENT_RAG_VECTOR_DB_CACHE_DIR,
+            exist_ok=vector_db_exists_ok,
+        )
+
+        return cls(llm=llm, ranker=ranker, vector_db=vector_db)
+
+    def add_pdf_documents(self, paths: Sequence[str]) -> int:
+        """Add one or more PDF documents to the DB, keeping track of text metadata."""
+        self.vector_db.add_pdf_documents(paths)
+
+    # TODO: Move number of documents to a configurable setting
+    def generate(self, prompt: str) -> RAGResult:
+        """Run retrieval-augmented generation on a prompt, using the given documents.
+
+        Args:
+            prompt: The question or prompt from a user, which will be used as the
+                input to the LLM.
+
+        Returns:
+            The generated response from the LLM.
+        """
+        retriever_results = self.vector_db.search(prompt, limit=self.retriever_chunks)
+        ranker_scores = self.ranker.predict(
+            documents=[result["text"] for result in retriever_results],
+            query=prompt,
+        )
+        sorted_indices = np.argsort(ranker_scores).tolist()
+        topk_indices = sorted_indices[-self.ranker_chunks :]
+        ranker_results = [
+            {**retriever_results[i], "similarity": ranker_scores[i]}
+            for i in topk_indices
+        ]
+
+        document_strings = [
+            DOCUMENT_TEMPLATE.format(
+                similarity=result["similarity"], text=result["text"]
+            )
+            for result in ranker_results
+        ]
+        documents = "\n".join(document_strings)
+        llm_prompt = PROMPT_TEMPLATE.format(documents=documents, question=prompt)
+        llm_response = self.llm.generate(llm_prompt)
+
+        return RAGResult(
+            text=llm_response,
+            prompt=llm_prompt,
+            search_results=ranker_results,
+        )
+
+
+if __name__ == "__main__":
+    import shutil
+
+    shutil.rmtree(Settings().DOCUMENT_RAG_VECTOR_DB_CACHE_DIR, ignore_errors=True)
+
+    rag = RAG.from_settings()
+    rag.add_pdf_documents(paths=["assets/alice-in-wonderland.pdf"])
+    result = rag.generate(prompt="What is the name of Alice's cat?")
+
+    print(
+        f"""Prompt:
+{result['prompt']}
+
+Response:
+{result['text']}"""
+    )
