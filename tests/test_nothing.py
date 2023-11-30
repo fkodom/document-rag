@@ -1,5 +1,5 @@
-import {{REPO_NAME_SNAKECASE}}
+import document_rag
 
 
 def test_nothing():
-    print({{REPO_NAME_SNAKECASE}})
+    print(document_rag)

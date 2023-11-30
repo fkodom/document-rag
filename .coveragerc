@@ -1,5 +1,5 @@
 [run]
-source = {{REPO_NAME_SNAKECASE}}
+source = document_rag
 
 [report]
 exclude_lines =
