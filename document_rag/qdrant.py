@@ -63,6 +63,10 @@ def add_pdf_document_to_index(
     chunk_size: int = CHUNK_SIZE,
     chunk_overlap: int = CHUNK_OVERLAP,
 ) -> None:
+    """Adds a PDF document to the Qdrant index, keeping track of which page numbers
+    each chunk of text came from.  The page range is stored in the metadata for each
+    text embedding.
+    """
     _, ext = os.path.splitext(path)
     if ext.lower() != ".pdf":
         raise ValueError(f"File extension '{ext}' not supported. Must be PDF.")
@@ -77,6 +81,8 @@ def add_pdf_document_to_index(
     metadata: list[TextInfo] = []
 
     while current_page < num_pages:
+        # If we don't have enough words to fill a chunk, add the next page of words.
+        # Otherwise, add the chunk to the index and move on to the next one.
         if len(words) < chunk_size:
             page = reader.pages[current_page]
             words += _format_text(page.extract_text()).split(" ")
@@ -89,11 +95,14 @@ def add_pdf_document_to_index(
 
             start_page = current_page
 
+    # Add the last chunk of words to the index.
     if len(words) > 0:
         text = " ".join(words)
         documents.append(text)
         metadata.append(TextInfo(path=path, page_range=(start_page, current_page)))
 
+    # Dump all of the collected text chunks into the index. (I believe this is
+    # slightly more efficient than adding them one at a time, due to batching.)
     client.add(
         collection_name=COLLECTION_NAME,
         documents=documents,
