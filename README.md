@@ -24,16 +24,24 @@ pip install -e ".[test]"
 pre-commit install
 ```
 
-Run the `chatbot.py` script:
+Export your `OPENAI_API_KEY` and run the `chatbot.py` script:
 
 ```bash
+export OPENAI_API_KEY="your-api-key"
 python chatbot.py \
     path/to/document-1.pdf \
     path/to/document-2.pdf \
     ...
 ```
 
-This will start a simple Q&A session.  Sample PDFs are provided in the `assets/` folder.  For example:
+Alternatively, you can also create a `.env` file in the root directory of the project:
+
+```bash
+# .env
+OPENAI_API_KEY="your-api-key"
+```
+
+The script will start a simple Q&A session.  Sample PDFs are provided in the `assets/` folder.  For example:
 
 ```bash
 python chatbot.py ./assets/alice-in-wonderland.pdf
