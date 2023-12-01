@@ -47,11 +47,8 @@ class OpenAILLM(BaseLLM):
             model=self.model.value,
             messages=[{"role": "user", "content": prompt}],
         )
-        return openai_response.choices[0].message.content
+        text = openai_response.choices[0].message.content
+        if text is None:
+            raise ValueError("OpenAI response was empty")
 
-
-if __name__ == "__main__":
-    response = OpenAILLM(
-        model=ModelType.GPT_3_5_TURBO,
-    ).generate("Respond with just the word 'STOP'.")
-    print(response)
+        return text

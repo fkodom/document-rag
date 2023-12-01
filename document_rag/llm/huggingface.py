@@ -23,10 +23,3 @@ class HuggingFaceLLM(BaseLLM):
         """Generate text from a prompt using the OpenAI API."""
         response = cast(Response, self.pipeline(prompt, do_sample=False)[0])
         return response["generated_text"]
-
-
-if __name__ == "__main__":
-    response = HuggingFaceLLM(model="mistralai/Mistral-7B-v0.1").generate(
-        "Respond with just one word: STOP.", stop=["STOP"]
-    )
-    print(response)

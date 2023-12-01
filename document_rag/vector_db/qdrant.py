@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import List, Sequence, Tuple, cast
+from typing import Any, List, Sequence, Tuple, cast
 
 from qdrant_client import QdrantClient
 from typing_extensions import Self
@@ -23,7 +23,7 @@ class QdrantVectorDB(BaseVectorDB):
     @classmethod
     def create(cls, cache_dir: str, exist_ok: bool = False) -> Self:
         os.makedirs(cache_dir, exist_ok=exist_ok)
-        return QdrantVectorDB(client=QdrantClient(path=cache_dir))
+        return cls(client=QdrantClient(path=cache_dir))
 
     def add_documents(self, documents: Sequence[Tuple[str, TextMetadata]]) -> None:
         """Add one or more documents to the DB, along with associated metadata."""
@@ -32,7 +32,7 @@ class QdrantVectorDB(BaseVectorDB):
         self.client.add(
             collection_name=COLLECTION_NAME,
             documents=_documents,
-            metadata=metadata,
+            metadata=cast(list[dict[str, Any]], metadata),  # For mypy
         )
 
     def search(self, query: str, limit: int = 10) -> List[SearchResult]:
@@ -58,24 +58,7 @@ class QdrantVectorDB(BaseVectorDB):
             SearchResult(
                 text=result.document,
                 similarity=result.score,
-                metadata=cast(SearchResult, result.metadata),
+                metadata=cast(TextMetadata, result.metadata),
             )
             for result in results
         ]
-
-
-if __name__ == "__main__":
-    import shutil
-
-    from document_rag.vector_db.base import INDEX_PATH
-
-    shutil.rmtree(INDEX_PATH, ignore_errors=True)
-    db: QdrantVectorDB = QdrantVectorDB.create(INDEX_PATH, exist_ok=True)
-    db.add_pdf_documents(["assets/alice-in-wonderland-short.pdf"])
-    results = db.search("Who is in Wonderland?", limit=5)
-    for result in results:
-        print("-" * 10)
-        print(
-            f"similarity: {result['similarity']}, path: '{result['metadata']['path']}"
-        )
-        print(result["text"])

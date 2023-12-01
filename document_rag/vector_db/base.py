@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from abc import abstractmethod
-from typing import Callable, List, Sequence, Tuple, TypeVar
+from typing import Any, Callable, List, Sequence, Tuple, TypeVar
 
 from pypdf import PdfReader
 from tqdm import tqdm
@@ -51,7 +51,7 @@ class BaseVectorDB:
             ValueError: If the DB is empty.
         """
 
-    def add_pdf_documents(self, paths: Sequence[str], verbose: bool = False) -> int:
+    def add_pdf_documents(self, paths: Sequence[str], verbose: bool = False) -> None:
         """Add one or more PDF documents to the DB, keeping track of text metadata.
 
         TODO:
@@ -84,8 +84,8 @@ def read_pdf_document(
     chunk_size: int = CHUNK_SIZE,
     chunk_overlap: int = CHUNK_OVERLAP,
     preprocessor: Callable[[str], str] = _format_text,
-    encoder: Callable[[str], List[T]] = lambda x: x.split(" "),
-    decoder: Callable[[Sequence[T]], str] = lambda x: " ".join(x),
+    encoder: Callable[[str], list] = lambda x: x.split(" "),
+    decoder: Callable[[Sequence], str] = lambda x: " ".join(x),
 ) -> List[Tuple[str, TextMetadata]]:
     """Extracts text from a PDF document, keeping track of which page numbers each
     chunk of text came from.  The page range is contained in the metadata for each
@@ -108,7 +108,7 @@ def read_pdf_document(
     num_pages = len(reader.pages)
     current_page = 0
     start_page = 0
-    tokens: List[T] = []
+    tokens: List[Any] = []
 
     while current_page < num_pages:
         # If we don't have enough words to fill a chunk, add the next page of words.
@@ -133,12 +133,3 @@ def read_pdf_document(
         )
 
     return result
-
-
-if __name__ == "__main__":
-    import time
-
-    start = time.perf_counter()
-    result = read_pdf_document("assets/alice-in-wonderland.pdf")
-    end = time.perf_counter()
-    print(f"Time: {end - start:.2f} seconds")
