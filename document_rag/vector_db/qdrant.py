@@ -36,7 +36,21 @@ class QdrantVectorDB(BaseVectorDB):
         )
 
     def search(self, query: str, limit: int = 10) -> List[SearchResult]:
-        """Query the DB, and return up to 'limit' most similar results."""
+        """Query the DB, and return up to 'limit' most similar results.
+
+        Args:
+            query: The query text.
+            limit: The maximum number of results to return.
+
+        Returns:
+            A list of search results, sorted by similarity in decreasing order.
+        Raises:
+            ValueError: If the DB is empty.
+        """
+        collection_info = self.client.get_collection(collection_name=COLLECTION_NAME)
+        if collection_info.segments_count == 0:
+            raise ValueError("The DB is empty.")
+
         results = self.client.query(
             collection_name=COLLECTION_NAME, query_text=query, limit=limit
         )

@@ -39,7 +39,17 @@ class BaseVectorDB:
 
     @abstractmethod
     def search(self, query: str, limit: int = 10) -> List[SearchResult]:
-        """Query the DB, and return up to 'limit' most similar results."""
+        """Query the DB, and return up to 'limit' most similar results.
+
+        Args:
+            query: The query text.
+            limit: The maximum number of results to return.
+
+        Returns:
+            A list of search results, sorted by similarity in decreasing order.
+        Raises:
+            ValueError: If the DB is empty.
+        """
 
     def add_pdf_documents(self, paths: Sequence[str], verbose: bool = False) -> int:
         """Add one or more PDF documents to the DB, keeping track of text metadata.

@@ -21,8 +21,8 @@ class HuggingFaceLLM(BaseLLM):
 
     def generate(self, prompt: str) -> str:
         """Generate text from a prompt using the OpenAI API."""
-        model_response = cast(Response, self.pipeline(prompt), do_sample=False)
-        return model_response["generated_text"]
+        response = cast(Response, self.pipeline(prompt, do_sample=False)[0])
+        return response["generated_text"]
 
 
 if __name__ == "__main__":

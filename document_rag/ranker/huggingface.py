@@ -7,9 +7,8 @@ from document_rag.ranker.base import BaseRanker
 
 
 class HuggingFaceRanker(BaseRanker):
-    # TODO: Move max_length to settings
-    def __init__(self, model: str, max_length: int = 512, device: Optional[str] = None):
-        self.model = CrossEncoder(model, max_length=max_length, device=device)
+    def __init__(self, model: str, device: Optional[str] = None):
+        self.model = CrossEncoder(model, device=device)
 
     def predict(self, query: str, documents: list[str]) -> list[float]:
         """Predict the relevance of a query and a list of documents."""

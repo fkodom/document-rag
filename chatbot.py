@@ -49,7 +49,8 @@ if __name__ == "__main__":
 
         print("\nReferences:")
         for reference in result["search_results"]:
-            print("\n", reference["metadata"]["path"], end="")
+            print()
+            print(reference["metadata"]["path"], end="")
             start_page, end_page = reference["metadata"]["page_range"]
             if start_page == end_page:
                 print(f"(p {start_page})")
