@@ -5,6 +5,7 @@ from abc import abstractmethod
 from typing import Callable, List, Sequence, Tuple, TypeVar
 
 from pypdf import PdfReader
+from tqdm import tqdm
 from typing_extensions import Self
 
 from document_rag.settings import Settings
@@ -40,7 +41,7 @@ class BaseVectorDB:
     def search(self, query: str, limit: int = 10) -> List[SearchResult]:
         """Query the DB, and return up to 'limit' most similar results."""
 
-    def add_pdf_documents(self, paths: Sequence[str]) -> int:
+    def add_pdf_documents(self, paths: Sequence[str], verbose: bool = False) -> int:
         """Add one or more PDF documents to the DB, keeping track of text metadata.
 
         TODO:
@@ -50,7 +51,7 @@ class BaseVectorDB:
           both for speed and memory footprint.
         """
         extracted: List[Tuple[str, TextMetadata]] = []
-        for path in paths:
+        for path in tqdm(paths, disable=(not verbose), desc="Extracting PDFs"):
             extracted += read_pdf_document(path)
 
         self.add_documents(extracted)
@@ -90,6 +91,8 @@ def read_pdf_document(
     _, ext = os.path.splitext(path)
     if ext.lower() != ".pdf":
         raise ValueError(f"File extension '{ext}' not supported. Must be PDF.")
+    elif not os.path.exists(path):
+        raise FileNotFoundError(f"File '{path}' does not exist.")
 
     reader = PdfReader(path)
     num_pages = len(reader.pages)
@@ -120,3 +123,12 @@ def read_pdf_document(
         )
 
     return result
+
+
+if __name__ == "__main__":
+    import time
+
+    start = time.perf_counter()
+    result = read_pdf_document("assets/alice-in-wonderland.pdf")
+    end = time.perf_counter()
+    print(f"Time: {end - start:.2f} seconds")

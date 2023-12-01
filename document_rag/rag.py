@@ -74,9 +74,9 @@ class RAG:
 
         return cls(llm=llm, ranker=ranker, vector_db=vector_db)
 
-    def add_pdf_documents(self, paths: Sequence[str]) -> int:
+    def add_pdf_documents(self, paths: Sequence[str], verbose: bool = False) -> int:
         """Add one or more PDF documents to the DB, keeping track of text metadata."""
-        self.vector_db.add_pdf_documents(paths)
+        self.vector_db.add_pdf_documents(paths, verbose=verbose)
 
     # TODO: Move number of documents to a configurable setting
     def generate(self, prompt: str) -> RAGResult:
@@ -96,7 +96,7 @@ class RAG:
         )
         sorted_indices = np.argsort(ranker_scores).tolist()
         topk_indices = sorted_indices[-self.ranker_chunks :]
-        ranker_results = [
+        ranker_results: list[SearchResult] = [
             {**retriever_results[i], "similarity": ranker_scores[i]}
             for i in topk_indices
         ]
@@ -126,6 +126,13 @@ if __name__ == "__main__":
     rag = RAG.from_settings()
     rag.add_pdf_documents(paths=["assets/alice-in-wonderland.pdf"])
     result = rag.generate(prompt="What is the name of Alice's cat?")
+
+    import time
+
+    start = time.perf_counter()
+    result = rag.generate(prompt="What is the name of Alice's cat?")
+    end = time.perf_counter()
+    print(f"Generation time: {end - start:.2f} seconds")
 
     print(
         f"""Prompt:
