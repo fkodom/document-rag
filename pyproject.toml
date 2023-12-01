@@ -33,6 +33,7 @@ exclude = ["tests"]
 
 # extra packages (e.g. pip install .[test])
 [project.optional-dependencies]
+api = ["fastapi==0.104.1", "uvicorn==0.24.0"]
 test = [
     "black",
     "mypy",
