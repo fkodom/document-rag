@@ -3,6 +3,8 @@ from typing import Optional
 
 from pydantic_settings import BaseSettings
 
+from document_rag import VERSION
+
 
 class Settings(BaseSettings):
     """Settings for the document_rag package."""
@@ -10,7 +12,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
 
-    DOCUMENT_RAG_VERSION: str = "0.0.0"
+    DOCUMENT_RAG_VERSION: str = VERSION
 
     OPENAI_API_KEY: Optional[str] = None
     HUGGINGFACE_TOKEN: Optional[str] = None
