@@ -38,6 +38,8 @@ jobs:
           pip install -e .[test]
 
       - name: Test
+        env:
+          OPENAI_API_KEY: "dummy-api-key"
         run: |
           ruff .
           pytest --cov --cov-report term-missing --cov-fail-under 80 tests/
