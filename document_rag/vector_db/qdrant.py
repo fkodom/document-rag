@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, List, Sequence, Tuple, cast
+from typing import Any, Dict, List, Sequence, Tuple, cast
 
 from qdrant_client import QdrantClient
 from typing_extensions import Self
@@ -32,7 +32,7 @@ class QdrantVectorDB(BaseVectorDB):
         self.client.add(
             collection_name=COLLECTION_NAME,
             documents=_documents,
-            metadata=cast(List[dict[str, Any]], metadata),  # For mypy
+            metadata=cast(List[Dict[str, Any]], metadata),  # For mypy
         )
 
     def search(self, query: str, limit: int = 10) -> List[SearchResult]:
