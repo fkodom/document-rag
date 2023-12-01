@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Optional, Type
 
 import pytest
 
@@ -15,7 +15,7 @@ from document_rag.ranker.huggingface import HuggingFaceRanker
         ("huggingface", "model-does-not-exist", OSError),  # error from HF backend
     ],
 )
-def test_load_ranker(type: str, model: str, error: Type[Exception] | None):
+def test_load_ranker(type: str, model: str, error: Optional[Type[Exception]]):
     if error is not None:
         with pytest.raises(error):
             _ = load_ranker(type=type, model=model)
