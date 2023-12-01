@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, cast
+from typing import List, Optional, Sequence, cast
 
 import numpy as np
 from sentence_transformers import CrossEncoder
@@ -10,7 +10,7 @@ class HuggingFaceRanker(BaseRanker):
     def __init__(self, model: str, device: Optional[str] = None):
         self.model = CrossEncoder(model, device=device)
 
-    def predict(self, query: str, documents: Sequence[str]) -> list[float]:
+    def predict(self, query: str, documents: Sequence[str]) -> List[float]:
         """Predict the relevance of a query and a list of documents."""
         scores = cast(
             np.ndarray,

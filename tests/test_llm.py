@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Optional, Type
 
 import pytest
 
@@ -16,7 +16,7 @@ from document_rag.llm.huggingface import HuggingFaceLLM
         ("unsupported-type", "distilgpt2", ValueError),
     ],
 )
-def test_load_llm(type: str, model: str, error: Type[Exception] | None):
+def test_load_llm(type: str, model: str, error: Optional[Type[Exception]]):
     if error is not None:
         with pytest.raises(error):
             _ = load_llm(type=type, model=model)

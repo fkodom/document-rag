@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, TypedDict
+from typing import List, Optional, Sequence, TypedDict
 
 import numpy as np
 from typing_extensions import Self
@@ -118,7 +118,7 @@ class RAG:
         )
         sorted_indices = np.argsort(ranker_scores).tolist()
         topk_indices = sorted_indices[-self.ranker_chunks :]
-        ranker_results: list[SearchResult] = [
+        ranker_results: List[SearchResult] = [
             {**retriever_results[i], "similarity": ranker_scores[i]}  # type: ignore
             for i in topk_indices
         ]

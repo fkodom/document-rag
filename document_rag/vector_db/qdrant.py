@@ -32,7 +32,7 @@ class QdrantVectorDB(BaseVectorDB):
         self.client.add(
             collection_name=COLLECTION_NAME,
             documents=_documents,
-            metadata=cast(list[dict[str, Any]], metadata),  # For mypy
+            metadata=cast(List[dict[str, Any]], metadata),  # For mypy
         )
 
     def search(self, query: str, limit: int = 10) -> List[SearchResult]:
