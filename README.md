@@ -69,6 +69,19 @@ right way to change them–’ when she was a little startled by seeing the Ches
 ```
 
 
+## How It Works
+
+First, PDF documents are ingested into the system:
+1. Extract text from each page
+2. Split text into (slightly overlapping) chunks
+3. Store chunks and their respective embeddings in a vector database (Qdrant)
+
+Then for each query, the system performs the following steps:
+1. Retrieve many (100) of text chunks from the vector DB that are similar to the query.  This uses an ANN index under the hood.  We collect many chunks to ensure that we have high recall.
+2. Re-rank the retrieved chunks using a cross-encoder model (better at capturing detailed similarity).  The top-scoring chunks will have much higher precision.
+3. Pass the top chunks (5) to an LLM along with our prompt for answer generation.  Let the language model handle the rest.
+
+
 ## Tests and Linting
 
 | Tool | Description | Runs on |

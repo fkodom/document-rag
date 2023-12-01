@@ -34,6 +34,10 @@ class RAGResult(TypedDict):
 
 
 class RAG:
+    """Simple implementation of retrieval-augmented generation (RAG), which is
+    inter-operable with several types of LLMs, text ranking models, and vector DBs.
+    """
+
     def __init__(
         self,
         llm: BaseLLM,
@@ -55,6 +59,19 @@ class RAG:
         settings: Optional[Settings] = None,
         vector_db_exists_ok: bool = False,
     ) -> Self:
+        """Instantiates a RAG object from the given settings.  All Settings fields
+        are configurable through ENV variables, and are loaded automatically. Users
+        may choose to modify them at the ENV level, or pass in a custom Settings
+        object to this method.
+
+        Args:
+            settings: The Settings object to use.  If None, a default Settings object
+                will be created.
+            vector_db_exists_ok: Whether to allow the vector DB to already exist on
+                disk.  If False, an error will be raised if the DB already exists.
+                This ensures that we don't accidentally write document embeddings
+                to an existing DB, which may contain unrelated data.
+        """
         if not settings:
             settings = Settings()
 
@@ -75,7 +92,12 @@ class RAG:
         return cls(llm=llm, ranker=ranker, vector_db=vector_db)
 
     def add_pdf_documents(self, paths: Sequence[str], verbose: bool = False) -> None:
-        """Add one or more PDF documents to the DB, keeping track of text metadata."""
+        """Add one or more PDF documents to the DB, keeping track of text metadata.
+
+        Args:
+            paths: The local paths to the PDF documents to add.
+            verbose: Whether to display a progress bar during the PDF extraction step.
+        """
         self.vector_db.add_pdf_documents(paths, verbose=verbose)
 
     # TODO: Move number of documents to a configurable setting
